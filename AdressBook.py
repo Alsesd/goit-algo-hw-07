@@ -1,5 +1,6 @@
 from collections import UserDict
-from datetime import datetime
+from datetime import datetime, timedelta
+from re import match
 
 class Field:
     def __init__(self, value, required=True):
@@ -15,11 +16,16 @@ class Field:
 class Birthday(Field):
     def __init__(self, value):
         try:
-            self.value = datetime.strptime(value, '%d.%m.%Y').date()
-
+            if match(r'\d\d\.[0-1]\d\.\d\d\d\d', value):
+                self.value = value
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
-
+    
+    def string_to_date(self, value):
+        return datetime.strptime(value, "%d.%m.%Y").date()
+    
+    def date_to_string(self, value):
+        return datetime.strftime(value, "%d.%m.%Y")
 
 class Name(Field):
     def __init__(self, value):
@@ -70,6 +76,35 @@ class Record: #add phone, delete phone, change phone, search phone
 class AddressBook(UserDict): #add record, delete record, search record
     def add_record(self, record):
         self.data[record.name.value] = record
+    
+    def get_upcoming_birthdays(self, days=7):
+        if not self.data:
+            return 'No contacts found'
+        upcoming_birthdays = []
+        today = datetime.today().date()
+        for record in self.data.values():
+            if record.birthday is None:
+                continue
+            birthday_this_year = record.birthday.string_to_date(record.birthday.value)
+            birthday_this_year = birthday_this_year.replace(year=today.year)
+            if birthday_this_year < today:
+                birthday_this_year = birthday_this_year.replace(year=today.year+1)
+            if 0 <= (birthday_this_year - today).days <= days:
+                birthday_this_year = self.__adjust_for_weekend(birthday_this_year)
+                congratulation_date_str = record.birthday.date_to_string(birthday_this_year)
+                upcoming_birthdays.append(f'{record.name.value}: {congratulation_date_str}')
+        return upcoming_birthdays
+
+    def __find_next_weekday(self, start_date, weekday):
+        days_ahead = weekday - start_date.weekday()
+        if days_ahead <= 0:
+            days_ahead += 7
+        return start_date + timedelta(days=days_ahead)
+
+    def __adjust_for_weekend(self,birthday):
+        if birthday.weekday() >= 5:
+            return self.__find_next_weekday(birthday, 0)
+        return birthday
     
     def find(self, name):
         return self.data.get(name, None)

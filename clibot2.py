@@ -1,5 +1,4 @@
 from AdressBook import *
-from datetime import datetime, date, timedelta
 
 def input_error(func):
     def inner(*args, **kwargs):
@@ -13,38 +12,6 @@ def input_error(func):
             return "Contact not found"
 
     return inner
-
-def get_upcoming_birthdays(book, days=7):
-    if not book.data:
-        return 'No contacts found'
-    upcoming_birthdays = []
-    today = date.today()
-    for record in book.data.values():
-        if record.birthday is None:
-            continue
-        birthday_this_year = record.birthday.value.replace(year=today.year)
-        if birthday_this_year < today:
-            birthday_this_year = record.birthday.value.replace(year=today.year+1)
-        if 0 <= (birthday_this_year - today).days <= days:
-            birthday_this_year = adjust_for_weekend(birthday_this_year)
-            congratulation_date_str = date_to_string(birthday_this_year)
-            upcoming_birthdays.append(f'{record.name.value}: {congratulation_date_str}')
-    return upcoming_birthdays
-
-def find_next_weekday(start_date, weekday):
-    days_ahead = weekday - start_date.weekday()
-    if days_ahead <= 0:
-        days_ahead += 7
-    return start_date + timedelta(days=days_ahead)
-
-
-def adjust_for_weekend(birthday):
-    if birthday.weekday() >= 5:
-        return find_next_weekday(birthday, 0)
-    return birthday
-
-def date_to_string(date):
-    return date.strftime("%d.%m.%Y")
 
 @input_error
 def parse_input(user_input):
@@ -100,6 +67,9 @@ def show_birthday(args, book):
         raise KeyError
     return record.birthday.value
 
+def get_upcoming_birthdays(book):
+    return book.get_upcoming_birthdays()
+
 
 def list_contacts(book):
     if not book.data:
@@ -110,7 +80,7 @@ def main():
     book = AddressBook()
     adolf = Record('adolf')
     book.add_record(adolf)
-    adolf.add_birthday('15.11.2001')
+    adolf.add_birthday('15.10.2001')
     print("Welcome to the assistant bot!")
     while True:
         user_input = input("Enter a command: ")
