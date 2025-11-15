@@ -1,8 +1,11 @@
+from functools import wraps
 from AdressBook import *
 
 def input_error(func):
+    @wraps(func)
     def inner(*args, **kwargs):
         try:
+            
             return func(*args, **kwargs)
         except ValueError:
             return "Give me name and phone please"
@@ -11,6 +14,16 @@ def input_error(func):
         except KeyError:
             return "Contact not found"
 
+    return inner
+
+def check_record(func):
+    @wraps(func)
+    def inner(args, book):
+        name = args[0]
+        record = book.find(name)
+        if record is None:
+            raise KeyError
+        return func(args, book)
     return inner
 
 @input_error
@@ -34,37 +47,33 @@ def add_contact(args, book: AddressBook):
     return message
 
 @input_error
+@check_record
 def change_contact(args, book):
     name, phone = args
     record = book.find(name)
-    if record is None:
-        raise KeyError
     record.edit_phone(record.phones[0].value, phone)
     return "Contact updated."
 
 @input_error
+@check_record
 def name_contact(args, book):
     name, *_ = args
     record = book.find(name)
-    if record is None:
-        raise KeyError
     return f"{name}: {', '.join(phone.value for phone in record.phones)}"
 
 @input_error
+@check_record
 def add_birthday(args, book):
     name, birthday = args
     record = book.find(name)
-    if record is None:
-        raise KeyError
     record.add_birthday(birthday)
     return 'Birthday added'
 
 @input_error
+@check_record
 def show_birthday(args, book):
     name, *_ = args
     record = book.find(name)
-    if record is None: 
-        raise KeyError
     return record.birthday.value
 
 def get_upcoming_birthdays(book):
@@ -78,9 +87,6 @@ def list_contacts(book):
 
 def main():
     book = AddressBook()
-    adolf = Record('adolf')
-    book.add_record(adolf)
-    adolf.add_birthday('15.10.2001')
     print("Welcome to the assistant bot!")
     while True:
         user_input = input("Enter a command: ")
@@ -121,4 +127,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
