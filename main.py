@@ -1,5 +1,5 @@
 from functools import wraps
-from AdressBook import *
+from adressbook import *
 
 def input_error(func):
     @wraps(func)
@@ -49,9 +49,9 @@ def add_contact(args, book: AddressBook):
 @input_error
 @check_record
 def change_contact(args, book):
-    name, phone = args
+    name, old_phone, new_phone = args
     record = book.find(name)
-    record.edit_phone(record.phones[0].value, phone)
+    record.edit_phone(old_phone, new_phone)
     return "Contact updated."
 
 @input_error
@@ -59,7 +59,7 @@ def change_contact(args, book):
 def name_contact(args, book):
     name, *_ = args
     record = book.find(name)
-    return f"{name}: {', '.join(phone.value for phone in record.phones)}"
+    return f"{name}: {', '.join((phone.value) for phone in record.phones)}"
 
 @input_error
 @check_record
@@ -74,6 +74,8 @@ def add_birthday(args, book):
 def show_birthday(args, book):
     name, *_ = args
     record = book.find(name)
+    if record.birthday is None:
+        return "Birthday not set for this contact"
     return record.birthday.value
 
 def get_upcoming_birthdays(book):

@@ -34,10 +34,13 @@ class Name(Field):
 
 
 class Phone(Field):
-   def __init__(self, value, required=False):
+    def __init__(self, value, required=False):
         super().__init__(value)
         if not len(value) == 10 or not value.isdigit():
             raise ValueError("Phone number must be 10 digits long")
+        
+    def __str__(self):
+        return str(self.value)
 
 
 class Record: #add phone, delete phone, change phone, search phone
@@ -68,9 +71,9 @@ class Record: #add phone, delete phone, change phone, search phone
         raise ValueError('No number found')
 
     def __str__(self):
-        return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}, birthday: {self.birthday.value}"
-    pass
-        
+        phones_str = '; '.join(str(p.value) for p in self.phones)
+        birthday_str = self.birthday.value if self.birthday else "Not set" 
+        return f"Contact name: {self.name.value}, phones: {phones_str}, birthday: {birthday_str}"
 
 
 class AddressBook(UserDict): #add record, delete record, search record
