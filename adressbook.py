@@ -1,6 +1,5 @@
 from collections import UserDict
 from datetime import datetime, timedelta
-from re import match
 
 class Field:
     def __init__(self, value, required=True):
@@ -16,8 +15,8 @@ class Field:
 class Birthday(Field):
     def __init__(self, value):
         try:
-            if match(r'\d\d\.[0-1]\d\.\d\d\d\d', value):
-                self.value = value
+            datetime.strptime(value, "%d.%m.%Y")
+            self.value = value
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
     
@@ -43,7 +42,7 @@ class Phone(Field):
         return str(self.value)
 
 
-class Record: #add phone, delete phone, change phone, search phone
+class Record:
     def __init__(self, name):
         self.name = Name(name)
         self.phones = []
@@ -61,8 +60,9 @@ class Record: #add phone, delete phone, change phone, search phone
 
     def edit_phone(self, old_phone, new_phone):
             if self.find_phone(old_phone) == None:
-                raise ValueError('Number not found') 
-            self.find_phone(old_phone).value = Phone(new_phone)
+                raise ValueError('Number not found')
+            new_phone = Phone(new_phone) 
+            self.find_phone(old_phone).value = new_phone.value 
     
     def find_phone(self, phone):
         for p in self.phones:
@@ -76,7 +76,7 @@ class Record: #add phone, delete phone, change phone, search phone
         return f"Contact name: {self.name.value}, phones: {phones_str}, birthday: {birthday_str}"
 
 
-class AddressBook(UserDict): #add record, delete record, search record
+class AddressBook(UserDict):
     def add_record(self, record):
         self.data[record.name.value] = record
     
